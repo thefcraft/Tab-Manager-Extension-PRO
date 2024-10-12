@@ -1,0 +1,25 @@
+{
+    "manifest_version": 3,
+    "name": "Tab Manager Extension",
+    "version": "1.0",
+    "description": "Manage your tabs in workspaces",
+    "permissions": ["tabs", "storage"],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "icon16.png",
+        "64": "icon64.png",
+        "128": "icon128.png",
+        "512": "icon512.png"
+      }
+    },
+    "icons": {
+      "16": "icon16.png",
+      "64": "icon64.png",
+      "128": "icon128.png",
+      "512": "icon512.png"
+    },
+    "background": {
+      "service_worker": "background.js"
+    }
+  }

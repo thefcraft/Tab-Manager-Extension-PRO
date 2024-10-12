@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            width: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .workspace-card {
+            transition: all 0.3s ease;
+        }
+        .workspace-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-600">Tab Manager</h1>
+    
+    <div class="mb-4">
+        <input id="newWorkspaceName" type="text" placeholder="Enter new workspace name" class="p-2 border rounded mr-2 w-2/3">
+        <button id="addWorkspaceBtn" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition duration-200">Add</button>
+    </div>
+
+    <div id="workspaceContainer" class="space-y-4">
+        <!-- Workspaces will be dynamically added here -->
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
