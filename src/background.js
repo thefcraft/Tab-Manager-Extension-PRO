@@ -1,4 +1,4 @@
-// background.js
-chrome.action.onClicked.addListener((tab) => {
-    chrome.action.setPopup({popup: 'popup.html'});
-  });
+// Optional: Handle events or background logic if needed
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('Extension installed');
+});

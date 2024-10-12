@@ -1,118 +1,246 @@
-// popup.js
-document.addEventListener('DOMContentLoaded', function() {
-    loadWorkspaces();
-    document.getElementById('addWorkspaceBtn').addEventListener('click', addWorkspace);
+// export interface Item {
+//     title: string;
+//     url: string;
+//     image: string;
+// }
+
+// export interface ItemCollection {
+//     [key: string]: Item[];
+// }
+
+// INFO: REDUCE IMAGE SIZE as we have 5 MB storage of localStorage...
+// TODO: switch to IndexedDB which have hundreds of megabytes of storage...
+
+class ItemStorage {
+    static STORAGE_KEY = 'itemCollection';
+    
+
+    static getItems() {
+        if (typeof localStorage !== "undefined") {
+            // Client-side-only code
+            const storedItems = localStorage.getItem(this.STORAGE_KEY);
+            return storedItems ? JSON.parse(storedItems) : {};
+        }
+        return {};
+    }
+
+    static saveItems(items) {
+        if (typeof localStorage !== "undefined") {
+            // Client-side-only code
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
+        }
+    }
+
+    static addItem(key, item) {
+        const items = this.getItems();
+        if (!items[key]) items[key] = [];
+        if (!item) {this.saveItems(items); return true;}
+        if (items[key].some(existingItem => (existingItem.url === item.url))) return false;
+        items[key].push(item);
+        this.saveItems(items);
+        return true;
+    }
+
+    static deleteItem(key, index) {
+        const items = this.getItems();
+        if (items[key] && index > -1 && index < items[key].length) {
+            items[key].splice(index, 1);
+            this.saveItems(items);
+        }
+    }
+
+    static updateItem(key, index, newItem) {
+        const items = this.getItems();
+        if (items[key] && index > -1 && index < items[key].length) {
+            items[key][index] = newItem;
+            this.saveItems(items);
+        }
+    }
+
+    static updateItemKey(oldKey, newKey) {
+        const items = this.getItems();
+        if (items[oldKey]) {
+            items[newKey] = items[oldKey];
+            delete items[oldKey];
+            this.saveItems(items);
+            return true;
+        }
+        return false;
+    }
+
+    static deleteItemKey(key) {
+        const items = this.getItems();
+        if (items[key]) {
+            delete items[key];
+            this.saveItems(items);
+        }
+    }
+}   
+
+const itemCollection = ItemStorage.getItems();
+const workflows = (Object.keys(itemCollection).map((key) => ({
+    name: key
+})));
+
+// Populate the dropdown with workflows
+const workflowSelect = document.getElementById('workflow');
+workflows.forEach(workflow => {
+    const option = document.createElement('option');
+    option.value = workflow.name;
+    option.textContent = workflow.name;
+    workflowSelect.appendChild(option);
 });
 
-function loadWorkspaces() {
-    chrome.storage.sync.get('workspaces', function(data) {
-        const workspaces = data.workspaces || {};
-        const container = document.getElementById('workspaceContainer');
-        container.innerHTML = '';
-
-        for (const [name, tabs] of Object.entries(workspaces)) {
-            const workspaceElement = createWorkspaceElement(name, tabs);
-            container.appendChild(workspaceElement);
+// Get the current URL and set it
+function getCurrentUrl() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs[0];
+        if (activeTab) {
+            document.getElementById('current-url').textContent = activeTab.url || '';
         }
     });
 }
 
-function createWorkspaceElement(name, tabs) {
-    const div = document.createElement('div');
-    div.className = 'bg-white rounded-lg shadow-md p-4 workspace-card';
-    div.innerHTML = `
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="text-lg font-semibold text-gray-800">${name}</h2>
-            <button class="text-red-500 hover:text-red-700 deleteWorkspaceBtn">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <ul class="space-y-2 mb-2">
-            ${tabs.map((tab, index) => `
-                <li class="flex justify-between items-center bg-gray-100 p-2 rounded">
-                    <a href="#" class="text-blue-600 hover:text-blue-800 truncate flex-grow openTabBtn" data-url="${tab.url}">
-                        <i class="fas fa-globe mr-2"></i>${tab.title || tab.url}
-                    </a>
-                    <button class="text-red-500 hover:text-red-700 ml-2 deleteTabBtn" data-index="${index}">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </li>
-            `).join('')}
-        </ul>
-        <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200 w-full mb-2 addCurrentTabBtn">
-            Add Current Tab
-        </button>
-        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200 w-full openAllTabsBtn">
-            Open All Tabs
-        </button>
-    `;
+// Function to capture a screenshot
+function captureScreenshot() {
+    chrome.tabs.captureVisibleTab(null, { format: 'png' }, (image) => {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            alert("Error capturing screenshot: " + chrome.runtime.lastError.message);
+            return;
+        }
+        
 
-    div.querySelector('.deleteWorkspaceBtn').addEventListener('click', () => deleteWorkspace(name));
-    div.querySelector('.addCurrentTabBtn').addEventListener('click', () => addCurrentTab(name));
-    div.querySelector('.openAllTabsBtn').addEventListener('click', () => openAllTabs(tabs));
-    div.querySelectorAll('.openTabBtn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            chrome.tabs.create({ url: btn.dataset.url });
-        });
-    });
-    div.querySelectorAll('.deleteTabBtn').forEach(btn => {
-        btn.addEventListener('click', () => deleteTab(name, parseInt(btn.dataset.index)));
-    });
+        // Create an image element
+        const img = new Image();
 
-    return div;
+        img.onload = () => {
+            // Create a canvas
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+  
+            // Define maximum dimensions for the thumbnail
+            const MAX_WIDTH = 480; // Maximum thumbnail width
+            const MAX_HEIGHT = 480; // Maximum thumbnail height
+  
+            // Calculate the new dimensions maintaining the aspect ratio
+            let width = img.width;
+            let height = img.height;
+  
+            // Calculate aspect ratio
+            const aspectRatio = width / height;
+  
+            if (width > height) {
+              // If wider than tall
+              if (width > MAX_WIDTH) {
+                width = MAX_WIDTH;
+                height = Math.round(width / aspectRatio);
+              }
+            } else {
+              // If taller than wide
+              if (height > MAX_HEIGHT) {
+                height = MAX_HEIGHT;
+                width = Math.round(height * aspectRatio);
+              }
+            }
+  
+            // Set canvas dimensions to the new thumbnail dimensions
+            canvas.width = width;
+            canvas.height = height;
+            // canvas.width = img.width;
+            // canvas.height = img.height;
+  
+            // Draw the image on the canvas
+            ctx.drawImage(img, 0, 0, width, height);
+            // ctx.drawImage(img, 0, 0);
+  
+            // Compress the image by setting the quality (0 to 1)
+            const quality = 0.7; // Adjust this value (0.7 is 70% quality)
+            const compressedImageUrl = canvas.toDataURL("image/jpeg", quality);
+            
+            // Set the image preview immediately after capturing
+            document.getElementById('image-preview').src = compressedImageUrl;
+        };
+        img.src = image;
+
+    });
 }
 
-function addWorkspace() {
-    const nameInput = document.getElementById('newWorkspaceName');
-    const name = nameInput.value.trim();
-    if (name) {
-        chrome.storage.sync.get('workspaces', function(data) {
-            const workspaces = data.workspaces || {};
-            workspaces[name] = [];
-            chrome.storage.sync.set({ workspaces }, loadWorkspaces);
-        });
-        nameInput.value = '';
-    }
-}
-
-function deleteWorkspace(name) {
-    chrome.storage.sync.get('workspaces', function(data) {
-        const workspaces = data.workspaces || {};
-        delete workspaces[name];
-        chrome.storage.sync.set({ workspaces }, loadWorkspaces);
-    });
-}
-
-function addCurrentTab(workspaceName) {
+function getCurrentTitle() {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        const currentTab = tabs[0];
-        chrome.storage.sync.get('workspaces', function(data) {
-            const workspaces = data.workspaces || {};
-            workspaces[workspaceName].push({ url: currentTab.url, title: currentTab.title });
-            chrome.storage.sync.set({ workspaces }, loadWorkspaces);
-        });
+        const activeTab = tabs[0];
+        document.getElementById('current-title').textContent = activeTab.title || "No title found";
     });
 }
 
-function deleteTab(workspaceName, tabIndex) {
-    chrome.storage.sync.get('workspaces', function(data) {
-        const workspaces = data.workspaces || {};
-        workspaces[workspaceName].splice(tabIndex, 1);
-        chrome.storage.sync.set({ workspaces }, loadWorkspaces);
-    });
+// Event listener for the Open Dashboard button
+document.getElementById('open-dashboard-button').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+});
+
+
+// Event listener for the Save button
+document.getElementById('save-button').addEventListener('click', () => {
+    const saveButton = document.getElementById('save-button');
+    if(saveButton.disabled) return;
+    const selectedWorkflow = workflowSelect.value;
+    const currentUrl = document.getElementById('current-url').textContent;
+    const currentTitle =document.getElementById('current-title').textContent;
+
+    if (!selectedWorkflow) {
+        document.getElementById('error-message').textContent = 'Please select a workflow.';
+        return;
+    }
+    if (!currentUrl) {
+        document.getElementById('error-message').textContent = 'No URL available to save.';
+        return;
+    }
+
+    
+    const isDone = ItemStorage.addItem(selectedWorkflow, {title: currentTitle, url: currentUrl, image: document.getElementById('image-preview').src});
+    if(!isDone) return document.getElementById('error-message').textContent = `Url: ${currentUrl} already exists in workflows ${selectedWorkflow}`;
+    
+    // Clear the form
+    workflowSelect.value = ""; // Reset the workflow dropdown
+    // document.getElementById('current-url').textContent = ""; // Clear the URL display
+    // document.getElementById('image-preview').src = "https://via.placeholder.com/150"; // Reset the image
+    
+    saveButton.disabled = true; // Disable the button
+    // Display success message
+    displayMessage('URL and screenshot saved successfully!', 'success');
+});
+
+// Function to display messages
+function displayMessage(message, type) {
+    const messageContainer = document.createElement('div');
+    messageContainer.textContent = message;
+    messageContainer.className = `message ${type}`;
+    document.body.insertBefore(messageContainer, document.querySelector('.container'));
+
+    // Remove the message after a few seconds
+    setTimeout(() => {
+        messageContainer.remove();
+    }, 3000);
 }
 
-// function openAllTabs(tabs) {
-//     tabs.forEach(tab => {
-//         chrome.tabs.create({ url: tab.url });
-//     });
-// }
-// function openAllTabsInNewWindow(tabs) {
-function openAllTabs(tabs) {
-    chrome.windows.create({ url: tabs[0].url }, (newWindow) => {
-        tabs.slice(1).forEach(tab => {
-            chrome.tabs.create({ windowId: newWindow.id, url: tab.url });
-        });
-    });
+// Function to update the enabled/disabled state of the Save button
+function updateSaveButtonState() {
+    const selectedWorkflow = workflowSelect.value;
+    const saveButton = document.getElementById('save-button');
+
+    // Disable the button if no workflow is selected
+    saveButton.disabled = selectedWorkflow === "";
 }
+
+// Event listener for workflow selection change
+workflowSelect.addEventListener('change', () => {
+    updateSaveButtonState();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    getCurrentTitle();
+    getCurrentUrl(); // Get the current URL on load
+    captureScreenshot(); // Capture screenshot when popup opens
+    updateSaveButtonState(); // Initial call to update button state
+});

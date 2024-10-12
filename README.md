@@ -1,8 +1,14 @@
-# Tab Manager Chrome Extension
+# Tab Manager Chrome Extension PRO
 
 **Are You Tired of Having Millions of Open Tabs? Manage Your Tabs in Workspaces!**
 
 Tab Manager is a Chrome extension designed to bring order to your browsing chaos. It helps you organize and manage your browser tabs efficiently by allowing you to create workspaces, save tabs, and quickly access them later. Say goodbye to cluttered browser windows and hello to a more organized, productive browsing experience!
+
+## TODO
+
+- [ ] switch to IndexedDB insted of localStorage.
+- [ ] add darktheme support to popup window.
+- [ ] add nextJs source code for dashboard.
 
 ## Features
 
@@ -20,7 +26,9 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 - **Never Lose Important Tabs**: Save and categorize important tabs for future reference
 
 
-![image](/img.png)
+![dashboard](/dashboard.png)
+
+![popup](/popup.png)
 
 ## Installation
 
@@ -33,7 +41,7 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 
 3. Enable "Developer mode" in the top right corner
 
-4. Click "Load unpacked" and select the directory containing the extension files i.e., src folder
+4. Click "Load unpacked" and select the directory containing the extension files i.e., `src folder`
 
 5. The Tab Manager extension should now appear in your Chrome toolbar
 
@@ -50,24 +58,6 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 5. Use the "Open All Tabs" button to open all tabs in a workspace in a new window
 
 6. Delete individual tabs or entire workspaces using the respective delete buttons
-
-## Development
-
-getting started with chrome extension? [learn here.](https://medium.com/@meet30997/getting-started-with-chrome-extension-in-2023-how-to-create-your-own-chrome-extension-f5716770e8bb)
-
-The extension consists of the following main files:
-
-- `manifest.json`: Contains extension metadata and permissions
-- `popup.html`: The HTML structure of the popup interface
-- `popup.js`: JavaScript file handling the extension's functionality
-- `styles.css`: Additional styles for the popup (if not using Tailwind CSS)
-
-To modify the extension:
-
-1. Make changes to the relevant files
-2. Save your changes
-3. Go to `chrome://extensions/`
-4. Click the "Reload" button for the Tab Manager extension
 
 ## Contributing
 
