@@ -6,9 +6,17 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 
 ## TODO
 
-- [ ] switch to IndexedDB insted of localStorage.
+- [ ] switch to IndexedDB insted of localStorage So we can improve image quality a little bit.
 - [ ] add darktheme support to popup window.
-- [ ] add nextJs source code for dashboard.
+- [x] add nextJs source code for dashboard.
+- [ ] add support for export json and load json for saved tabs...
+- [ ] add support for publishing tabs/workspaces with others...
+- [ ] save data to server with support for firebase to login and logout...
+- [ ] add option to edit workspace name for given url/item in a workspace maybe add a selector item at popup dialog window
+- [ ] Optional: add feature to add comments + tags on an given url/item.
+- [ ] Optional: add feature to add tags + description on workflow.
+- [ ] BUG: when we rename an workflow then the urls is not updated it shows old workflows but select the new workflow defaults... Not that important to solve as we can scroll the website to solve this
+- [ ] make it more responsive by adding collapsible sidebar
 
 ## Features
 
