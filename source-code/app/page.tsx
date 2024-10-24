@@ -1,142 +1,341 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Layers, Link, Zap, Clock, Search, Shield } from "lucide-react"
-import { ReactNode } from "react"
+"use client";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  Settings,
+  HelpCircle,
+  ExternalLink,
+  Edit,
+  Trash2,
+  Grid,
+  List,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { SideBar } from "@/components/sidebar";
+import { Nav, ActiveTab, NavHome } from "@/components/nav";
 
-function FeatureCard({ icon, title, description }: {icon:ReactNode, title: string, description: string}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          {icon}
-          <span>{title}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription>{description}</CardDescription>
-      </CardContent>
-    </Card>
+import { EditSaveUrl } from "@/components/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Item, ItemCollection, ItemStorage } from "@/app/db";
+
+export default function Component() {
+  const [activeWorkflow, setActiveWorkflow] = useState(-1);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("grid");
+  const [itemCollection, setItemCollection] = useState<ItemCollection>({});
+
+  const [workflows, setWorkflows] = useState<{name: string;urls: number;}[]>([]);
+  const [urls, setUrls] = useState<{title: string;url: string;image: string;}[]>([]);
+
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    if(!(activeWorkflow < 0 || activeWorkflow >= workflows.length)) setUrls(itemCollection[wflows[activeWorkflow].name]);
+  }, []);
+
+  const imageUrlState = useState('');
+  const [imageUrl, setImageUrl] = imageUrlState;
+  const urlNameState = useState('');
+  const [urlName, setUrlName] = urlNameState;
+  const urlTitleState = useState('');
+  const [urlTitle, setUrlTitle] = urlTitleState;
+
+  const searchValueState = useState('');
+  const [searchValue, setSearchValue] = searchValueState;
+
+  const toggleDarkMode = () => {};
+  const handleDeleteUrl = (key: number) => {};
+
+  const createNewWorkflow = (newWorkflowName: string) => {
+    ItemStorage.addItem(newWorkflowName);
+    if(newWorkflowName in itemCollection) return toast({
+      title: "Uh oh! Something went wrong.",
+      description: `Workflow ${newWorkflowName} already exists`,
+      variant: "destructive"
+    });
+    setActiveWorkflow(workflows.length);
+    setItemCollection({...itemCollection, [newWorkflowName]: []});
+    setWorkflows([...workflows, {name: newWorkflowName, urls: 0}]);
+    setUrls([]);
+  }
+  const setActiveWorkflowHandler = (key: number) => {
+    if(key < 0 || key >= workflows.length) return toast({
+      title: "Uh oh! Something went wrong.",
+      description: `list index ${key} out of range`,
+      variant: "destructive"
+    });
+    if(activeWorkflow == key) {
+      setUrls([]);
+      setActiveWorkflow(-1);
+      return;   
+    }
+    setActiveWorkflow(key);  
+    // if(workflows[key].urls === 0) setUrls([]); // why this raises an error at starting
+    setUrls(itemCollection[workflows[key].name]);
+  }
+
+  const renameWorkflow = (newName: string) => {
+    ItemStorage.updateItemKey(workflows[activeWorkflow].name, newName);
+   
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    setActiveWorkflow(workflows.length - 1);
+    if(wflows.length !== 0) setUrls(itemCollection[wflows[activeWorkflow].name]);
+  }
+  const deleteWorkflow = ()=>{
+    ItemStorage.deleteItemKey(workflows[activeWorkflow].name);
+   
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    setActiveWorkflow(-1);
+    setUrls([]);
+  }
+
+  const renameUrl = (key: number) => {
+    ItemStorage.updateItem(workflows[activeWorkflow].name, key, {title: urlTitle, url: urlName, image: imageUrl});
+
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    if(wflows.length !== 0) setUrls(itemCollection[wflows[activeWorkflow].name]);
+  }  
+  const deleteUrl = (key: number) => {
+    ItemStorage.deleteItem(workflows[activeWorkflow].name, key);
+
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    if(wflows.length !== 0) setUrls(itemCollection[wflows[activeWorkflow].name]);
+  }
+
+  const addNewUrl2Workflow = (imageUrl: string, urlName: string, urlTitle: string) => {
+    const name = workflows[activeWorkflow].name;
+    const item = {title: urlTitle, url: urlName, image: imageUrl};
+    const isDone = ItemStorage.addItem(name, item);
+    if(!isDone) return toast({
+      title: "Uh oh! Something went wrong.",
+      description: `Url ${urlName} already exists`,
+      variant: "destructive"
+    });
+    
+    const itemCollection = ItemStorage.getItems()
+    setItemCollection(itemCollection);
+    const wflows = (Object.keys(itemCollection).map((key) => ({
+        name: key,
+        urls: itemCollection[key].length,
+    })));
+    setWorkflows(wflows);
+    if(wflows.length !== 0) setUrls(itemCollection[wflows[activeWorkflow].name]);
+    
+  }
+
+  const filteredUrls = urls.filter(url => 
+    url.title.toLowerCase().includes(searchValue.toLowerCase())
   )
-}
 
-export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Layers className="h-6 w-6 text-primary" />
-            <span className="text-2xl font-bold text-primary">WorkflowURL</span>
-          </div>
-          <nav>
-            <ul className="flex space-x-4">
-              <li><a href="#features" className="text-gray-600 hover:text-primary">Features</a></li>
-              <li><a href="#pricing" className="text-gray-600 hover:text-primary">Pricing</a></li>
-              <li><a href="#contact" className="text-gray-600 hover:text-primary">Contact</a></li>
-            </ul>
-          </nav>
+    <TooltipProvider>
+      <div className="flex h-screen bg-gray-50 text-gray-900 dark:text-gray-50 dark:bg-gray-900">
+        {/* Sidebar */}
+        <SideBar
+          workflows={workflows}
+          setActiveWorkflowHandler={setActiveWorkflowHandler}
+          activeWorkflow={activeWorkflow}
+          createNewWorkflow={createNewWorkflow}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          {(activeWorkflow < 0 || activeWorkflow >= workflows.length)?
+            <NavHome itemCollection={itemCollection}/>
+          :
+            <Nav
+              workflows={workflows}
+              activeWorkflow={activeWorkflow}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              urls={urls}
+              addNewUrl2Workflow={addNewUrl2Workflow}
+              renameWorkflow={renameWorkflow}
+              deleteWorkflow={deleteWorkflow}
+              searchValueState={searchValueState}
+            />
+          }
+          
+
+          {/* URL Grid */}
+          <ScrollArea className="flex-1 p-6">
+            <div
+              className={cn(
+                activeTab === "list"
+                  ? "flex flex-col"
+                  : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                "gap-6"
+              )}
+            >
+              {filteredUrls.map((url, key) => (
+                <div
+                  key={key}
+                  className={cn(
+                    "bg-background rounded-lg shadow-md overflow-hidden border border-muted transition-all hover:shadow-lg",
+                    activeTab === "list" ? "flex" : ""
+                  )}
+                >
+                  <a href={url.url}
+                      target="_blank"
+                      rel="noopener noreferrer">
+                    <img
+                      src={url.image}
+                      alt={url.title}
+                      className={cn(
+                        "w-full h-40 object-cover cursor-pointer",
+                        activeTab === "list" ? "w-60 min-w-60" : ""
+                      )}
+                    />
+                  </a>
+                  <div className="p-4 flex flex-col  justify-between">
+                    <h3 className="font-semibold text-lg mb-2 overflow-hidden overflow-ellipsis text-nowrap">
+                      {url.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 overflow-hidden overflow-ellipsis text-nowrap">
+                      {url.url}
+                    </p>
+                    <div
+                      className={cn(
+                        "flex items-center",
+                        activeTab === "list" ? "" : "justify-between"
+                      )}
+                    >
+                      <Button variant="link" asChild>
+                        <a
+                          href={url.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Open
+                        </a>
+                      </Button>
+                      <div className="flex space-x-2">
+                        <EditSaveUrl
+                          imageUrlState={imageUrlState}
+                          urlNameState={urlNameState}
+                          urlTitleState={urlTitleState}
+                          callback={() => renameUrl(key)}
+                          title="Edit URL"
+                          tooltip="Edit URL"
+                          defaultImageUrl={url.image}
+                          defaultUrlName={url.url}
+                          defaultUrlTitle={url.title}
+                        >
+                          <Button variant="ghost" size="icon">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </EditSaveUrl>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 w-9">
+                                  <Trash2 className="w-4 h-4" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete URL</TooltipContent>
+                            </Tooltip>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete this url from the workflow
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteUrl(key)} className="bg-red-500 hover:bg-red-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(activeWorkflow < 0 || activeWorkflow >= workflows.length) && 
+                <div className="w-full h-full flex justify-center items-center">Open any workflow or Create new workflow</div>
+            }
+            {urls.length === 0 && !(activeWorkflow < 0 || activeWorkflow >= workflows.length) && 
+              <div className="w-full h-full flex justify-center items-center">Add new Url to workflow</div>
+            }
+          </ScrollArea>
         </div>
-      </header>
-
-      <main className="flex-grow">
-        <section className="bg-gradient-to-b from-white to-gray-100 py-20">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Streamline Your Workflow with Organized URLs
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Boost your productivity by effortlessly managing and accessing your important web resources in one place.
-            </p>
-            <Button size="lg" className="mr-4">Get Started</Button>
-            <Button size="lg" variant="outline">Learn More</Button>
-          </div>
-        </section>
-
-        <section id="features" className="py-20">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <FeatureCard
-                icon={<Link className="h-10 w-10 text-primary" />}
-                title="URL Management"
-                description="Easily organize and categorize your URLs into custom workflows for quick access."
-              />
-              <FeatureCard
-                icon={<Zap className="h-10 w-10 text-primary" />}
-                title="One-Click Access"
-                description="Open all URLs in a workflow with a single click, saving you valuable time."
-              />
-              <FeatureCard
-                icon={<Clock className="h-10 w-10 text-primary" />}
-                title="Workflow Automation"
-                description="Schedule URL openings and integrate with your calendar for synchronized productivity."
-              />
-              <FeatureCard
-                icon={<Search className="h-10 w-10 text-primary" />}
-                title="Powerful Search"
-                description="Quickly find specific URLs or workflows with our advanced search functionality."
-              />
-              <FeatureCard
-                icon={<Shield className="h-10 w-10 text-primary" />}
-                title="Secure & Private"
-                description="Your data is encrypted and stored securely, ensuring your privacy at all times."
-              />
-              <FeatureCard
-                icon={<Layers className="h-10 w-10 text-primary" />}
-                title="Customizable Interface"
-                description="Personalize your experience with customizable themes and layouts."
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-gray-100 py-20">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-8">Ready to Boost Your Productivity?</h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Join thousands of professionals who have streamlined their workflow with WorkflowURL.
-            </p>
-            <Button size="lg">Start Your Free Trial</Button>
-          </div>
-        </section>
-      </main>
-
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">WorkflowURL</h3>
-              <p className="text-gray-400">Streamline your workflow with organized URLs</p>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">Features</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Pricing</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">FAQ</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Company</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Careers</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Terms of Service</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
-            <p>&copy; 2023 WorkflowURL. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
+      </div>
+    </TooltipProvider>
+  );
 }
