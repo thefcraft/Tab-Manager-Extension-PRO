@@ -19,6 +19,10 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 - [ ] Optional: add feature to add tags + description on workflow.
 - [ ] make it more responsive by adding collapsible sidebar
 
+## Build
+
+just run `python build.py` it will generate out-extension and out-extension-firefox
+
 ## Features
 
 - Create multiple workspaces to organize your tabs

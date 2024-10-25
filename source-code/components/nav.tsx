@@ -114,7 +114,7 @@ function importFromFile(event: React.ChangeEvent<HTMLInputElement>, key_override
         // setJsonData(null);
       }
     } catch (err) {
-      alert('Invalid JSON file');
+      alert(`Invalid JSON file, Error ${err}`);
       // setError('Invalid JSON file');
       // setJsonData(null);
     }

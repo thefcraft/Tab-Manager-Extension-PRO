@@ -194,7 +194,7 @@ export default function Component() {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen bg-gray-50 text-gray-900 dark:text-gray-50 dark:bg-gray-900">
+      <div className="flex h-screen bg-gray-50 text-gray-900 dark:text-gray-50 dark:bg-[rgb(21,21,21)]">
         {/* Sidebar */}
         <SideBar
           workflows={workflows}
