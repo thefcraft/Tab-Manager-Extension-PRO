@@ -4,8 +4,8 @@
 
 Tab Manager is a Chrome extension designed to bring order to your browsing chaos. It helps you organize and manage your browser tabs efficiently by allowing you to create workspaces, save tabs, and quickly access them later. Say goodbye to cluttered browser windows and hello to a more organized, productive browsing experience!
 
-[Install on Firefox](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-extension/)
-[Install on Edge](https://microsoftedge.microsoft.com/addons/detail/tab-manager-extension/abcaeljbkknboenliomnpakkbabaplni)
+- [Install on Firefox](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-extension/)
+- [Install on Edge](https://microsoftedge.microsoft.com/addons/detail/tab-manager-extension/abcaeljbkknboenliomnpakkbabaplni)
 
 ## TODO
 
