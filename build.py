@@ -10,7 +10,7 @@ def main()->Optional[bool]:
         os.chdir('source-code')
         print("Building source code...")
         if os.path.exists('out'): shutil.rmtree('out')
-        if os.path.exists('node_modules'): subprocess.call("npm i", shell=True)
+        if not os.path.exists('node_modules'): subprocess.call("npm i", shell=True)
         os.makedirs('out', exist_ok=True)
         subprocess.call("npm run build", shell=True)
         os.chdir('..')
