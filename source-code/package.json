@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "rimraf out && next build && node scripts/post-build.js && python scripts/post.py && mv out/_next out/next",
+    "build": "next build && node scripts/post-build.js && python scripts/post.py && mv out/_next out/next",
     "start": "next start",
     "lint": "next lint"
   },
