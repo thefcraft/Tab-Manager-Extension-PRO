@@ -6,6 +6,7 @@ Tab Manager is a Chrome extension designed to bring order to your browsing chaos
 
 - [Install on Firefox](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-extension/)
 - [Install on Edge](https://microsoftedge.microsoft.com/addons/detail/tab-manager-extension/abcaeljbkknboenliomnpakkbabaplni)
+- [Install on Chrome](https://github.com/thefcraft/Tab-Manager-Extension-PRO/releases)
 
 ## TODO
 
@@ -44,20 +45,12 @@ just run `python build.py` it will generate out-extension and out-extension-fire
 
 ![popup](/popup.png)
 
-## Installation
+## 📦 Installation (Manual for Google Chrome)
 
-1. Clone this repository or download the source code:
-   ```
-   git clone https://github.com/thefcraft/tab-manager-chrome-extension.git
-   ```
+The extension is not yet on the Chrome Web Store, but you can still install it manually.
 
-2. Open Google Chrome and navigate to `chrome://extensions/`
-
-3. Enable "Developer mode" in the top right corner
-
-4. Click "Load unpacked" and select the directory containing the extension files i.e., `src folder`
-
-5. The Tab Manager extension should now appear in your Chrome toolbar
+👉 Please visit the [Releases Page](https://github.com/thefcraft/Tab-Manager-Extension-PRO/releases/) and download the latest version (`out-extension-chrome.zip`) from the **Assets** section.
+Follow the step-by-step instructions provided in the release notes to load the extension into Chrome.
 
 ## Usage
 

@@ -1,4 +1,5 @@
 import os, shutil
+import zipfile
 os.chdir(os.path.dirname(__file__))
 
 if os.path.exists(os.path.join('..', 'out-extension')): shutil.rmtree(os.path.join('..', 'out-extension'))
@@ -25,3 +26,13 @@ shutil.copy('favicon.ico', os.path.join('..', 'out-extension-firefox', 'favicon.
 shutil.copy('popup.html', os.path.join('..', 'out-extension-firefox', 'popup.html'))
 shutil.copy('popup.js', os.path.join('..', 'out-extension-firefox', 'popup.js'))
 shutil.copytree('images', os.path.join('..', 'out-extension-firefox', 'images'))
+
+def zip_folder(folder_path: str, zip_path: str) -> None:
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, folder_path)
+                zipf.write(file_path, arcname)
+
+zip_folder(os.path.join('..', 'out-extension'), os.path.join('..', 'out-extension-chrome.zip'))
